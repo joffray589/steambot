@@ -18,10 +18,10 @@ export interface LoginSession {
 }
 
 export enum TwoFactorState{
-    Locked = 0,
-    Disabled = 1,
-    Enabled = 2,
-    Finalized = 3
+    Locked      = 0,
+    Disabled    = 1,
+    Unfinalized = 2,
+    Finalized   = 3
 }
 
 export interface TwoFactorSettings {
@@ -88,8 +88,8 @@ export class SteamBot extends EventEmitter{
 
 
         this._community.on("confKeyNeeded", (tag: SteamTotp.TagType, callback: (err: Error, time: number, key: string) => any) => {
-            var time = Math.floor(Date.now() / 1000);
-            var secret = this._settings.twoFactor.identitySecret;
+            let time = Math.floor(Date.now() / 1000);
+            let secret = this._settings.twoFactor.identitySecret;
             // only triggered when confirmation checker is running => <secret> is set at this point
             callback(null, time, SteamTotp.getConfirmationKey(secret, time, tag));
         });
@@ -137,7 +137,7 @@ export class SteamBot extends EventEmitter{
 
     private makeLoginOptions(botOptions: BotLoginOptions): SteamCommunity.LoginOptions {
 
-        var loginOptions = <SteamCommunity.LoginOptions>{
+        let loginOptions = <SteamCommunity.LoginOptions>{
             accountName: this._settings.username,
             password: this._settings.password,
             authCode: botOptions.authCode,
@@ -161,7 +161,7 @@ export class SteamBot extends EventEmitter{
             callback(LoginError.AlreadyLoggedIn);
         }
 
-        var loginOptions = this.makeLoginOptions(options);
+        let loginOptions = this.makeLoginOptions(options);
 
         this._community.login(loginOptions, (err: Error, sessionID: string, cookies: any, steamguard: string) => {
             if(err){
@@ -241,7 +241,7 @@ export class SteamBot extends EventEmitter{
                     }
                     else{
 
-                        this._settings.twoFactor.state = TwoFactorState.Enabled;
+                        this._settings.twoFactor.state = TwoFactorState.Unfinalized;
                         this._settings.twoFactor.sharedSecret = response.shared_secret;
                         this._settings.twoFactor.revocationCode = response.revocation_code;
                         this._settings.twoFactor.identitySecret = response.identity_secret;
@@ -274,14 +274,14 @@ export class SteamBot extends EventEmitter{
         else if(this._settings.twoFactor.state == TwoFactorState.Finalized){
             callback(new Error("totp is already enabled and finalized"));
         }
-        else if(this._settings.twoFactor.state != TwoFactorState.Enabled){
+        else if(this._settings.twoFactor.state != TwoFactorState.Unfinalized){
             callback(new Error("you must enable totp before finalize it"));
         }
         else if(this._loginSession == null){
             callback(new Error("not logged in"));
         }
         else{
-            var secret: string = this._settings.twoFactor.sharedSecret;
+            let secret: string = this._settings.twoFactor.sharedSecret;
             this._community.finalizeTwoFactor(secret, code, (err: Error) => {
                 if(err){
                     callback(new Error("steamCommunity.finalizeTwoFactor"));
@@ -308,7 +308,7 @@ export class SteamBot extends EventEmitter{
         else{
             this._community.disableTwoFactor(this._settings.twoFactor.revocationCode, (err: Error) => {
                 if(err){
-                    callback(new Error("steamCommunity.disableTwoFactor"));
+                    callback(new Error("steamCommunity.disableTwoFactor error : " + err));
                 }
                 else{
                     this._settings.twoFactor = <TwoFactorSettings>{ state: TwoFactorState.Disabled };
@@ -329,8 +329,8 @@ export class SteamBot extends EventEmitter{
             callback(new Error("not logged in"));
         }
         else{
-            var pollInterval = this._settings.trade.confirmationPollInterval;
-            var identitySecret = this._settings.twoFactor.identitySecret;
+            let pollInterval = this._settings.trade.confirmationPollInterval;
+            let identitySecret = this._settings.twoFactor.identitySecret;
 
             this._community.startConfirmationChecker(pollInterval, identitySecret);
             this._confirmationChecker = true;
