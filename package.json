@@ -1,10 +1,12 @@
 {
   "name": "steambot",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "build/index.js",
   "typings": "build/index",
   "scripts": {
+    "prepublish": "npm run build",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -15,11 +17,11 @@
     "@types/steamcommunity": "joffray589/steamcommunity-ts",
     "@types/steamid": "joffray589/steamid-ts",
     "@types/winston": "^2.2.0",
-    "fs": "0.0.1-security",
     "steam-totp": "^1.4.0",
     "steam-tradeoffer-manager": "^2.7.0",
     "steamcommunity": "^3.30.6",
     "steamid": "^1.1.0",
-    "winston": "^2.3.1"
+    "winston": "^2.3.1",
+    "fs": "0.0.1-security"
   }
 }
