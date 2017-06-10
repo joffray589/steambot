@@ -2,9 +2,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es6",
-    "outDir": "build",
-    "declaration": true,
-    "strict": true
+    "outDir": ".",
+    "declaration": true
   },
   "exclude": [
     "build",

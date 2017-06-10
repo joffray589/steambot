@@ -2,13 +2,19 @@
   "name": "steambot",
   "version": "0.0.1",
   "description": "",
-  "main": "build/index.js",
-  "typings": "build/index",
+  "main": "index.js",
+  "typings": "index",
   "scripts": {
     "prepublish": "npm run build",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "files": [
+      "index.js",
+      "index.d.ts",
+      "SteamBot.d.ts",
+      "SteamBot.js"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
