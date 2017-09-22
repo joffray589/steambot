@@ -18,6 +18,21 @@ let doLogin = (async (botData: ISteamBotData) => {
     bot.login(botLoginOption)
     .then(() => {
         console.log("You are now logged in");
+
+        bot.chatLogon(200, "web");
+
+        bot.onChatMessage((senderId: SteamID, text: string) => {
+            console.log(senderId + " : " + text);
+            bot.sendChatMessage(senderId, "hello " + senderId + " how are you?")
+                .then(() => {
+                    console.log("Answer sended");
+                })
+                .catch((error) => {
+                    console.error("Send answer error : " + error);
+                });
+        });
+
+
     })
     .catch((loginError) => {
         if(loginError.type == LoginErrorType.CaptchaRequired){
