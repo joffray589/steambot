@@ -390,19 +390,50 @@ export class SteamBot extends EventEmitter{
 
     }
 
-
-    async handleTradeRequest(request: TradeRequest) : Promise<TradeOfferManager.TradeOffer>{
-        return new Promise<TradeOfferManager.TradeOffer>((resolve, reject) => {
-
-            let offer = this._tradeOfferManager.createOffer(request.tradeUrl);
-
-            resolve(offer);
+    chatLogon(interval?: number, uiMode?: "web" | "mobile"){
+        return new Promise<void>((resolve, reject) => {
+            if(this._loginSession == null){
+                reject(new Error("not logged in"));
+            }
+            else{
+                this._community.chatLogon(interval, uiMode);
+                resolve();
+            }
         });
     }
 
+    chatLogoff() : Promise<void>{
+        return new Promise<void>((resolve, reject) => {
+            if(this._loginSession == null){
+                reject(new Error("not logged in"));
+            }
+            else{
+                this._community.chatLogoff();
+                resolve();
+            }
+        });
+    }
 
-    /** ********** **/
-    // Typed events handling
+    sendChatMessage(recipientId: SteamID, text: string, type?: "saytext" | "typing") : Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if(this._loginSession == null){
+                reject(new Error("not logged in"));
+            }
+            else{
+                this._community.chatMessage(recipientId, text, type, (err: Error) => {
+                    if(error){
+                        reject(error);
+                    }
+                    else{
+                        resolve();
+                    }
+                });
+            }
+        });
+    }
+
+    /** Typed events handling **/
+    // Trading events
     onNewOffer(callback: (offer: TradeOfferManager.TradeOffer) => any){
         this._tradeOfferManager.on("newOffer", callback);
     }
@@ -439,8 +470,34 @@ export class SteamBot extends EventEmitter{
         this._tradeOfferManager.on("pollData", callback);
     }
 
+    // Chat events
+    onChatLogonFailed(callback: (err: Error, fatal: boolean) => any){
+        this._community.on("chatLogOnFailed", callback);
+    }
+
+
     onSessionExpired(callback: (err: Error) => any){
         this._community.on("sessionExpired", callback);
+    }
+
+    onChatLoggedOn(callback: () => any){
+        this._community.on("chatLoggedOn", callback);
+    }
+
+    onChatPersonaState(callback: (steamID: SteamID, persona: SteamCommunity.Persona) => any){
+        this._community.on("chatPersonaState", callback);
+    }
+
+    onChatMessage(callback: (sender: SteamID, text: string) => any){
+        this._community.on("chatMessage", callback);
+    }
+
+    onChatTyping(callback: (sender: SteamID) => any){
+        this._community.on("chatTyping", callback);
+    }
+
+    onChatLoggedOf(callback: () => any){
+        this._community.on("chatLoggedOff", callback);
     }
 
     /** ********** **/

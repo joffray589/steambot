@@ -1,7 +1,9 @@
 /// <reference types="node" />
 /// <reference types="steamcommunity" />
+/// <reference types="steamid" />
 /// <reference types="steam-tradeoffer-manager" />
 import { EventEmitter } from "events";
+import SteamID = require("steamid");
 import SteamCommunity = require("steamcommunity");
 import TradeOfferManager = require("steam-tradeoffer-manager");
 import CConfirmation = SteamCommunity.CConfirmation;
@@ -79,8 +81,10 @@ export declare class SteamBot extends EventEmitter {
     checkConfirmations(): void;
     getConfirmations(): Promise<CConfirmation[]>;
     answerConfirmation(confirmation: CConfirmation, accept: boolean): Promise<void>;
-    handleTradeRequest(request: TradeRequest): Promise<TradeOfferManager.TradeOffer>;
-    /** ********** **/
+    chatLogon(interval?: number, uiMode?: "web" | "mobile"): Promise<void>;
+    chatLogoff(): Promise<void>;
+    sendChatMessage(recipientId: SteamID, text: string, type?: "saytext" | "typing"): Promise<void>;
+    /** Typed events handling **/
     onNewOffer(callback: (offer: TradeOfferManager.TradeOffer) => any): void;
     onSentOfferChanged(callback: (offer: TradeOfferManager.TradeOffer, oldState: TradeOfferManager.ETradeOfferState) => any): void;
     onSentOfferCanceled(callback: (offer: TradeOfferManager.TradeOffer, reason: string) => any): void;
@@ -90,7 +94,13 @@ export declare class SteamBot extends EventEmitter {
     onPollFailure(callback: (err: Error) => any): void;
     onPollSuccess(callback: () => any): void;
     onPollData(callback: (pollData: any) => any): void;
+    onChatLogonFailed(callback: (err: Error, fatal: boolean) => any): void;
     onSessionExpired(callback: (err: Error) => any): void;
+    onChatLoggedOn(callback: () => any): void;
+    onChatPersonaState(callback: (steamID: SteamID, persona: SteamCommunity.Persona) => any): void;
+    onChatMessage(callback: (sender: SteamID, text: string) => any): void;
+    onChatTyping(callback: (sender: SteamID) => any): void;
+    onChatLoggedOf(callback: () => any): void;
     /** ********** **/
     private printTotpResponse(response);
     private readonly tradeOfferManagerOptions;

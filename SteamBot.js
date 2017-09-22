@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 const events_1 = require("events");
 const util_1 = require("util");
 const SteamCommunity = require("steamcommunity");
@@ -296,16 +288,47 @@ class SteamBot extends events_1.EventEmitter {
             });
         });
     }
-    handleTradeRequest(request) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                let offer = this._tradeOfferManager.createOffer(request.tradeUrl);
-                resolve(offer);
-            });
+    chatLogon(interval, uiMode) {
+        return new Promise((resolve, reject) => {
+            if (this._loginSession == null) {
+                reject(new Error("not logged in"));
+            }
+            else {
+                this._community.chatLogon(interval, uiMode);
+                resolve();
+            }
         });
     }
-    /** ********** **/
-    // Typed events handling
+    chatLogoff() {
+        return new Promise((resolve, reject) => {
+            if (this._loginSession == null) {
+                reject(new Error("not logged in"));
+            }
+            else {
+                this._community.chatLogoff();
+                resolve();
+            }
+        });
+    }
+    sendChatMessage(recipientId, text, type) {
+        return new Promise((resolve, reject) => {
+            if (this._loginSession == null) {
+                reject(new Error("not logged in"));
+            }
+            else {
+                this._community.chatMessage(recipientId, text, type, (err) => {
+                    if (util_1.error) {
+                        reject(util_1.error);
+                    }
+                    else {
+                        resolve();
+                    }
+                });
+            }
+        });
+    }
+    /** Typed events handling **/
+    // Trading events
     onNewOffer(callback) {
         this._tradeOfferManager.on("newOffer", callback);
     }
@@ -333,8 +356,27 @@ class SteamBot extends events_1.EventEmitter {
     onPollData(callback) {
         this._tradeOfferManager.on("pollData", callback);
     }
+    // Chat events
+    onChatLogonFailed(callback) {
+        this._community.on("chatLogOnFailed", callback);
+    }
     onSessionExpired(callback) {
         this._community.on("sessionExpired", callback);
+    }
+    onChatLoggedOn(callback) {
+        this._community.on("chatLoggedOn", callback);
+    }
+    onChatPersonaState(callback) {
+        this._community.on("chatPersonaState", callback);
+    }
+    onChatMessage(callback) {
+        this._community.on("chatMessage", callback);
+    }
+    onChatTyping(callback) {
+        this._community.on("chatTyping", callback);
+    }
+    onChatLoggedOf(callback) {
+        this._community.on("chatLoggedOff", callback);
     }
     /** ********** **/
     printTotpResponse(response) {
