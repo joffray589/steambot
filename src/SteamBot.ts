@@ -19,22 +19,23 @@ export enum TwoFactorState{
 
 export interface ISteamBotData{
 
-    id:                     number;
+    id?:                    number;
 
     username:               string;
     password:               string;
 
+    pollDataDirectory:      string;
+
     /* Two factor auth datas */
     twoFactorState: TwoFactorState;
-    twoFactorSharedSecret: string;
-    twoFactorRevocationCode: string;
-    twoFactorIdentitySecret: string;
+    twoFactorSharedSecret?: string;
+    twoFactorRevocationCode?: string;
+    twoFactorIdentitySecret?: string;
 
     /* Trade offer manager data */
-    tradeOfferDomain: string;
-    tradeOfferPollInterval: number;
-    tradeOfferConfirmationPollInterval: number;
-
+    tradeOfferDomain?: string;
+    tradeOfferPollInterval?: number;
+    tradeOfferConfirmationPollInterval?: number;
 }
 
 export interface LoginSession {
@@ -120,14 +121,12 @@ export class SteamBot extends EventEmitter{
         }
     }
 
-    login(options: BotLoginOptions) : Promise<void>{
-
+    login(options?: BotLoginOptions) : Promise<void>{
         return new Promise<void>((resolve, reject) => {
             if(this._loginSession != null){
                 reject(new LoginError(LoginErrorType.AlreadyLoggedIn));
             }
 
-            console.log("2");
             let loginOptions = <SteamCommunity.LoginOptions>{
                 accountName:        this._botDatas.username,
                 password:           this._botDatas.password,
@@ -136,7 +135,6 @@ export class SteamBot extends EventEmitter{
                 twoFactorCode:      options.twoFactorCode,
                 steamguard:         options.steamguard
             };
-            console.log("3");
 
             if(this._botDatas.twoFactorState == TwoFactorState.Finalized){
                 loginOptions.twoFactorCode = SteamTotp.getAuthCode(this._botDatas.twoFactorSharedSecret);
@@ -144,7 +142,7 @@ export class SteamBot extends EventEmitter{
 
             this._community.login(loginOptions, (err: Error, sessionID: string, cookies: any, steamguard: string) => {
                 if(err){
-                    console.log("SteamCommunity.login error : " + err.message);
+                    console.log("Login error : " + err);
                     if(err.message == "SteamGuardMobile")   { reject(new LoginError(LoginErrorType.MobileCodeRequired)); }
                     else if(err.message == "SteamGuard")    { reject(new LoginError(LoginErrorType.MailCodeRequired));   }
                     else if(err.message == "CAPTCHA")       { reject(new LoginError(LoginErrorType.CaptchaRequired));    }
@@ -433,6 +431,12 @@ export class SteamBot extends EventEmitter{
     }
 
     /** Typed events handling **/
+
+    onLoggedIn(callback: () => any){
+        this.on(SteamBotEvent.LoggedIn, callback);
+    }
+
+
     // Trading events
     onNewOffer(callback: (offer: TradeOfferManager.TradeOffer) => any){
         this._tradeOfferManager.on("newOffer", callback);
@@ -524,7 +528,7 @@ export class SteamBot extends EventEmitter{
     }
 
     private get pollDataFilePath() : string{
-        return "data/bot_poll_data/" + this._botDatas.username + ".polldata.json";
+        return this._botDatas.pollDataDirectory + "/" + this._botDatas.username + ".polldata.json";
     }
 
     private writePollData(pollData: any){

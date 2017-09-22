@@ -14,16 +14,17 @@ export declare enum TwoFactorState {
     Finalized = 3,
 }
 export interface ISteamBotData {
-    id: number;
+    id?: number;
     username: string;
     password: string;
+    pollDataDirectory: string;
     twoFactorState: TwoFactorState;
-    twoFactorSharedSecret: string;
-    twoFactorRevocationCode: string;
-    twoFactorIdentitySecret: string;
-    tradeOfferDomain: string;
-    tradeOfferPollInterval: number;
-    tradeOfferConfirmationPollInterval: number;
+    twoFactorSharedSecret?: string;
+    twoFactorRevocationCode?: string;
+    twoFactorIdentitySecret?: string;
+    tradeOfferDomain?: string;
+    tradeOfferPollInterval?: number;
+    tradeOfferConfirmationPollInterval?: number;
 }
 export interface LoginSession {
     cookies: any;
@@ -71,7 +72,7 @@ export declare class SteamBot extends EventEmitter {
     private _loginSession;
     private _confirmationChecker;
     constructor(datas: ISteamBotData);
-    login(options: BotLoginOptions): Promise<void>;
+    login(options?: BotLoginOptions): Promise<void>;
     logout(): Promise<void>;
     enableTotp(): Promise<void>;
     finalizeTotp(code: string): Promise<void>;
@@ -85,6 +86,7 @@ export declare class SteamBot extends EventEmitter {
     chatLogoff(): Promise<void>;
     sendChatMessage(recipientId: SteamID, text: string, type?: "saytext" | "typing"): Promise<void>;
     /** Typed events handling **/
+    onLoggedIn(callback: () => any): void;
     onNewOffer(callback: (offer: TradeOfferManager.TradeOffer) => any): void;
     onSentOfferChanged(callback: (offer: TradeOfferManager.TradeOffer, oldState: TradeOfferManager.ETradeOfferState) => any): void;
     onSentOfferCanceled(callback: (offer: TradeOfferManager.TradeOffer, reason: string) => any): void;

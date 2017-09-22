@@ -56,7 +56,6 @@ class SteamBot extends events_1.EventEmitter {
             if (this._loginSession != null) {
                 reject(new LoginError(LoginErrorType.AlreadyLoggedIn));
             }
-            console.log("2");
             let loginOptions = {
                 accountName: this._botDatas.username,
                 password: this._botDatas.password,
@@ -65,13 +64,12 @@ class SteamBot extends events_1.EventEmitter {
                 twoFactorCode: options.twoFactorCode,
                 steamguard: options.steamguard
             };
-            console.log("3");
             if (this._botDatas.twoFactorState == TwoFactorState.Finalized) {
                 loginOptions.twoFactorCode = SteamTotp.getAuthCode(this._botDatas.twoFactorSharedSecret);
             }
             this._community.login(loginOptions, (err, sessionID, cookies, steamguard) => {
                 if (err) {
-                    console.log("SteamCommunity.login error : " + err.message);
+                    console.log("Login error : " + err);
                     if (err.message == "SteamGuardMobile") {
                         reject(new LoginError(LoginErrorType.MobileCodeRequired));
                     }
@@ -328,6 +326,9 @@ class SteamBot extends events_1.EventEmitter {
         });
     }
     /** Typed events handling **/
+    onLoggedIn(callback) {
+        this.on(exports.SteamBotEvent.LoggedIn, callback);
+    }
     // Trading events
     onNewOffer(callback) {
         this._tradeOfferManager.on("newOffer", callback);
@@ -397,7 +398,7 @@ class SteamBot extends events_1.EventEmitter {
         };
     }
     get pollDataFilePath() {
-        return "data/bot_poll_data/" + this._botDatas.username + ".polldata.json";
+        return this._botDatas.pollDataDirectory + "/" + this._botDatas.username + ".polldata.json";
     }
     writePollData(pollData) {
         fs.writeFile(this.pollDataFilePath, JSON.stringify(pollData));
