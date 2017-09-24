@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
 const util_1 = require("util");
 const SteamCommunity = require("steamcommunity");
@@ -24,7 +25,7 @@ var LoginErrorType;
 class LoginError {
     constructor(type, err) {
         this.type = type;
-        this.error = util_1.error;
+        this.error = err;
     }
 }
 exports.LoginError = LoginError;
@@ -32,6 +33,9 @@ exports.SteamBotEvent = {
     DataModified: "DataModified",
     LoggedIn: "LoggedIn"
 };
+/**
+ *
+ */
 class SteamBot extends events_1.EventEmitter {
     constructor(datas) {
         super();
@@ -41,12 +45,6 @@ class SteamBot extends events_1.EventEmitter {
         this._confirmationChecker = false;
         this._tradeOfferManager = new TradeOfferManager(this.tradeOfferManagerOptions);
         this._tradeOfferManager.on('pollData', pollData => this.writePollData(pollData));
-        this._community.on("confKeyNeeded", (tag, callback) => {
-            let time = Math.floor(Date.now() / 1000);
-            let secret = this._botDatas.twoFactorIdentitySecret; // triggered when confirmation checker is running
-            let key = SteamTotp.getConfirmationKey(secret, time, tag); //          => <secret> is set at this point
-            callback(null, time, key);
-        });
         if (fs.existsSync(this.pollDataFilePath)) {
             this._tradeOfferManager.pollData = JSON.parse(fs.readFileSync(this.pollDataFilePath).toString());
         }
@@ -74,7 +72,7 @@ class SteamBot extends events_1.EventEmitter {
                         reject(new LoginError(LoginErrorType.MobileCodeRequired));
                     }
                     else if (err.message == "SteamGuard") {
-                        reject(new LoginError(LoginErrorType.MailCodeRequired));
+                        reject(new LoginError(LoginErrorType.MailCodeRequired, err));
                     }
                     else if (err.message == "CAPTCHA") {
                         reject(new LoginError(LoginErrorType.CaptchaRequired));
@@ -235,6 +233,11 @@ class SteamBot extends events_1.EventEmitter {
             else {
                 let pollInterval = this._botDatas.tradeOfferConfirmationPollInterval;
                 let identitySecret = this._botDatas.twoFactorIdentitySecret;
+                this._community.on("confKeyNeeded", (tag, callback) => {
+                    let time = Math.floor(Date.now() / 1000);
+                    let key = SteamTotp.getConfirmationKey(identitySecret, time, tag);
+                    callback(null, time, key);
+                });
                 this._community.startConfirmationChecker(pollInterval, identitySecret);
                 this._confirmationChecker = true;
                 resolve();
@@ -316,6 +319,8 @@ class SteamBot extends events_1.EventEmitter {
             else {
                 this._community.chatMessage(recipientId, text, type, (err) => {
                     if (util_1.error) {
+                        console.log("HHHH");
+                        console.log(JSON.stringify(util_1.error));
                         reject(util_1.error);
                     }
                     else {

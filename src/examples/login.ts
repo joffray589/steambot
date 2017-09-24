@@ -1,6 +1,7 @@
 import {BotLoginOptions, ISteamBotData, LoginErrorType, SteamBot} from "../SteamBot";
 
 let ReadLine = require('readline');
+let fs = require('fs');
 
 let lineReader = ReadLine.createInterface({
     "input": process.stdin,
@@ -9,7 +10,7 @@ let lineReader = ReadLine.createInterface({
 
 let botLoginOption: BotLoginOptions = {};
 
-let doLogin = (async (botData: ISteamBotData) => {
+let doLogin = ((botData: ISteamBotData) => {
 
     let bot = new SteamBot(botData);
 
@@ -29,6 +30,7 @@ let doLogin = (async (botData: ISteamBotData) => {
                 })
                 .catch((error) => {
                     console.error("Send answer error : " + error);
+                    console.trace();
                 });
         });
 
@@ -43,7 +45,7 @@ let doLogin = (async (botData: ISteamBotData) => {
             });
         }
         else if(loginError.type == LoginErrorType.MailCodeRequired){
-            console.log("An email has been sent to your address at " + loginError.error.emaildomain);
+            console.log("An email has been sent to your address at ***." + loginError.error.emaildomain);
             lineReader.question("Mail Code : ", (code: string) => {
                 botLoginOption.authCode = code;
                 doLogin(botData);
@@ -64,17 +66,30 @@ let doLogin = (async (botData: ISteamBotData) => {
     });
 });
 
+let botData: ISteamBotData = <ISteamBotData>{
+    username: "",
+    password: "",
+    pollDataDirectory: "data",
+};
+
+try{
+    botData = <ISteamBotData>JSON.parse(fs.readFileSync('testing_botdata.json', 'utf8'));
+    doLogin(botData);
+}
+catch(error){
+    lineReader.question("UserName : ", (username: string) => {
+        lineReader.question("Password : ", (password: string) => {
+            botData.username = username;
+            botData.password = password;
+            doLogin(botData);
+        });
+    });
+}
 
 
-lineReader.question("UserName : ", (username: string) => {
-   lineReader.question("Password : ", (password: string) => {
-       doLogin(<ISteamBotData>{
-           username: username,
-           password: password,
-           pollDataDirectory: "data"
-       });
-   });
-});
+
+
+
 
 
 

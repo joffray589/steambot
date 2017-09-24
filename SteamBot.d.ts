@@ -65,6 +65,9 @@ export interface TradeRequest {
     botItems: TradeItem[];
     partnerItems: TradeItem[];
 }
+/**
+ *
+ */
 export declare class SteamBot extends EventEmitter {
     private _botDatas;
     private _community;

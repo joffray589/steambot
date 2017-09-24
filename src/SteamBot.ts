@@ -23,7 +23,6 @@ export interface ISteamBotData{
 
     username:               string;
     password:               string;
-
     pollDataDirectory:      string;
 
     /* Two factor auth datas */
@@ -59,7 +58,7 @@ export class LoginError {
 
     constructor(type: LoginErrorType, err?: any){
         this.type = type;
-        this.error = error;
+        this.error = err;
     }
 
 }
@@ -89,7 +88,9 @@ export interface TradeRequest{
     partnerItems: TradeItem[];
 }
 
-
+/**
+ *
+ */
 export class SteamBot extends EventEmitter{
 
     private _botDatas:              ISteamBotData;
@@ -108,13 +109,6 @@ export class SteamBot extends EventEmitter{
         this._tradeOfferManager = new TradeOfferManager(this.tradeOfferManagerOptions);
 
         this._tradeOfferManager.on('pollData', pollData => this.writePollData(pollData));
-
-        this._community.on("confKeyNeeded", (tag: SteamTotp.TagType, callback: (err: Error, time: number, key: string) => any) => {
-            let time = Math.floor(Date.now() / 1000);
-            let secret = this._botDatas.twoFactorIdentitySecret;         // triggered when confirmation checker is running
-            let key = SteamTotp.getConfirmationKey(secret, time, tag);   //          => <secret> is set at this point
-            callback(null, time, key);
-        });
 
         if(fs.existsSync(this.pollDataFilePath)){
             this._tradeOfferManager.pollData = JSON.parse(fs.readFileSync(this.pollDataFilePath).toString());
@@ -144,7 +138,7 @@ export class SteamBot extends EventEmitter{
                 if(err){
                     console.log("Login error : " + err);
                     if(err.message == "SteamGuardMobile")   { reject(new LoginError(LoginErrorType.MobileCodeRequired)); }
-                    else if(err.message == "SteamGuard")    { reject(new LoginError(LoginErrorType.MailCodeRequired));   }
+                    else if(err.message == "SteamGuard")    { reject(new LoginError(LoginErrorType.MailCodeRequired, err));   }
                     else if(err.message == "CAPTCHA")       { reject(new LoginError(LoginErrorType.CaptchaRequired));    }
                     else                                    { reject(new LoginError(LoginErrorType.SteamCommunityError, err)); }
                 }
@@ -323,6 +317,12 @@ export class SteamBot extends EventEmitter{
                 let pollInterval = this._botDatas.tradeOfferConfirmationPollInterval;
                 let identitySecret = this._botDatas.twoFactorIdentitySecret;
 
+                this._community.on("confKeyNeeded", (tag: SteamTotp.TagType, callback: (err: Error, time: number, key: string) => any) => {
+                    let time = Math.floor(Date.now() / 1000);
+                    let key = SteamTotp.getConfirmationKey(identitySecret, time, tag);
+                    callback(null, time, key);
+                });
+
                 this._community.startConfirmationChecker(pollInterval, identitySecret);
                 this._confirmationChecker = true;
 
@@ -420,6 +420,8 @@ export class SteamBot extends EventEmitter{
             else{
                 this._community.chatMessage(recipientId, text, type, (err: Error) => {
                     if(error){
+                        console.log("HHHH");
+                        console.log(JSON.stringify(error));
                         reject(error);
                     }
                     else{
