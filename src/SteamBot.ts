@@ -418,16 +418,8 @@ export class SteamBot extends EventEmitter{
                 reject(new Error("not logged in"));
             }
             else{
-                this._community.chatMessage(recipientId, text, type, (err: Error) => {
-                    if(error){
-                        console.log("HHHH");
-                        console.log(JSON.stringify(error));
-                        reject(error);
-                    }
-                    else{
-                        resolve();
-                    }
-                });
+                this._community.chatMessage(recipientId, text, type);
+                resolve();
             }
         });
     }
@@ -507,8 +499,6 @@ export class SteamBot extends EventEmitter{
     }
 
     /** ********** **/
-
-
     private printTotpResponse(response: SteamCommunity.EnableTwoFactorResponse){
         console.log('#################');
         console.log('!! COPY THIS SOMEWHERE !!');
@@ -519,7 +509,6 @@ export class SteamBot extends EventEmitter{
         console.log('raw_response: ' + response);
         console.log('#################');
     }
-
 
     private get tradeOfferManagerOptions() : TradeOfferManager.Options{
         return <TradeOfferManager.Options>{

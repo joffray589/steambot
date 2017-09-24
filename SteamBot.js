@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
-const util_1 = require("util");
 const SteamCommunity = require("steamcommunity");
 const SteamTotp = require("steam-totp");
 const TradeOfferManager = require("steam-tradeoffer-manager");
@@ -317,16 +316,8 @@ class SteamBot extends events_1.EventEmitter {
                 reject(new Error("not logged in"));
             }
             else {
-                this._community.chatMessage(recipientId, text, type, (err) => {
-                    if (util_1.error) {
-                        console.log("HHHH");
-                        console.log(JSON.stringify(util_1.error));
-                        reject(util_1.error);
-                    }
-                    else {
-                        resolve();
-                    }
-                });
+                this._community.chatMessage(recipientId, text, type);
+                resolve();
             }
         });
     }
