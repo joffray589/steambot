@@ -321,9 +321,31 @@ class SteamBot extends events_1.EventEmitter {
             }
         });
     }
+    createTradeOffer(tradeUrl) {
+        return new Promise((resolve, reject) => {
+            if (this._loginSession == null) {
+                reject(new Error("not logged in"));
+            }
+            else {
+                resolve(this._tradeOfferManager.createOffer(tradeUrl));
+            }
+        });
+    }
     /** Typed events handling **/
     onLoggedIn(callback) {
         this.on(exports.SteamBotEvent.LoggedIn, callback);
+    }
+    onPollFailure(callback) {
+        this._tradeOfferManager.on("pollFailure", callback);
+    }
+    onPollSuccess(callback) {
+        this._tradeOfferManager.on("pollSuccess", callback);
+    }
+    onPollData(callback) {
+        this._tradeOfferManager.on("pollData", callback);
+    }
+    onSessionExpired(callback) {
+        this._community.on("sessionExpired", callback);
     }
     // Trading events
     onNewOffer(callback) {
@@ -344,21 +366,12 @@ class SteamBot extends events_1.EventEmitter {
     onReceivedOfferChanged(callback) {
         this._tradeOfferManager.on("receivedOfferChanged", callback);
     }
-    onPollFailure(callback) {
-        this._tradeOfferManager.on("pollFailure", callback);
-    }
-    onPollSuccess(callback) {
-        this._tradeOfferManager.on("pollSuccess", callback);
-    }
-    onPollData(callback) {
-        this._tradeOfferManager.on("pollData", callback);
-    }
     // Chat events
     onChatLogonFailed(callback) {
         this._community.on("chatLogOnFailed", callback);
     }
-    onSessionExpired(callback) {
-        this._community.on("sessionExpired", callback);
+    onChatLoggedOf(callback) {
+        this._community.on("chatLoggedOff", callback);
     }
     onChatLoggedOn(callback) {
         this._community.on("chatLoggedOn", callback);
@@ -371,9 +384,6 @@ class SteamBot extends events_1.EventEmitter {
     }
     onChatTyping(callback) {
         this._community.on("chatTyping", callback);
-    }
-    onChatLoggedOf(callback) {
-        this._community.on("chatLoggedOff", callback);
     }
     /** ********** **/
     printTotpResponse(response) {

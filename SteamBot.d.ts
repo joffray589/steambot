@@ -7,6 +7,7 @@ import SteamID = require("steamid");
 import SteamCommunity = require("steamcommunity");
 import TradeOfferManager = require("steam-tradeoffer-manager");
 import CConfirmation = SteamCommunity.CConfirmation;
+import TradeOffer = TradeOfferManager.TradeOffer;
 export declare enum TwoFactorState {
     Locked = 0,
     Disabled = 1,
@@ -88,24 +89,25 @@ export declare class SteamBot extends EventEmitter {
     chatLogon(interval?: number, uiMode?: "web" | "mobile"): Promise<void>;
     chatLogoff(): Promise<void>;
     sendChatMessage(recipientId: SteamID, text: string, type?: "saytext" | "typing"): Promise<void>;
+    createTradeOffer(tradeUrl: string): Promise<TradeOffer>;
     /** Typed events handling **/
     onLoggedIn(callback: () => any): void;
+    onPollFailure(callback: (err: Error) => any): void;
+    onPollSuccess(callback: () => any): void;
+    onPollData(callback: (pollData: any) => any): void;
+    onSessionExpired(callback: (err: Error) => any): void;
     onNewOffer(callback: (offer: TradeOfferManager.TradeOffer) => any): void;
     onSentOfferChanged(callback: (offer: TradeOfferManager.TradeOffer, oldState: TradeOfferManager.ETradeOfferState) => any): void;
     onSentOfferCanceled(callback: (offer: TradeOfferManager.TradeOffer, reason: string) => any): void;
     onSentPendingOfferCanceled(callback: (offer: TradeOfferManager.TradeOffer) => any): void;
     onUnknownOfferSent(callback: (offer: TradeOfferManager.TradeOffer) => any): void;
     onReceivedOfferChanged(callback: (offer: TradeOfferManager.TradeOffer, oldState: TradeOfferManager.ETradeOfferState) => any): void;
-    onPollFailure(callback: (err: Error) => any): void;
-    onPollSuccess(callback: () => any): void;
-    onPollData(callback: (pollData: any) => any): void;
     onChatLogonFailed(callback: (err: Error, fatal: boolean) => any): void;
-    onSessionExpired(callback: (err: Error) => any): void;
+    onChatLoggedOf(callback: () => any): void;
     onChatLoggedOn(callback: () => any): void;
     onChatPersonaState(callback: (steamID: SteamID, persona: SteamCommunity.Persona) => any): void;
     onChatMessage(callback: (sender: SteamID, text: string) => any): void;
     onChatTyping(callback: (sender: SteamID) => any): void;
-    onChatLoggedOf(callback: () => any): void;
     /** ********** **/
     private printTotpResponse(response);
     private readonly tradeOfferManagerOptions;

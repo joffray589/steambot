@@ -1,5 +1,4 @@
 import {EventEmitter} from "events";
-import {error} from "util";
 
 import SteamID              = require("steamid");
 import SteamCommunity       = require("steamcommunity");
@@ -7,6 +6,7 @@ import SteamTotp            = require("steam-totp");
 import TradeOfferManager    = require("steam-tradeoffer-manager");
 
 import CConfirmation = SteamCommunity.CConfirmation;
+import TradeOffer = TradeOfferManager.TradeOffer;
 
 let fs = require("fs");
 
@@ -424,10 +424,39 @@ export class SteamBot extends EventEmitter{
         });
     }
 
+
+    createTradeOffer(tradeUrl: string): Promise<TradeOffer> {
+        return new Promise<TradeOffer>((resolve, reject) => {
+            if(this._loginSession == null){
+                reject(new Error("not logged in"));
+            }
+            else{
+                resolve(this._tradeOfferManager.createOffer(tradeUrl));
+            }
+        });
+    }
+
+
     /** Typed events handling **/
 
     onLoggedIn(callback: () => any){
         this.on(SteamBotEvent.LoggedIn, callback);
+    }
+
+    onPollFailure(callback: (err: Error) => any){
+        this._tradeOfferManager.on("pollFailure", callback);
+    }
+
+    onPollSuccess(callback: () => any){
+        this._tradeOfferManager.on("pollSuccess", callback);
+    }
+
+    onPollData(callback: (pollData: any) => any){
+        this._tradeOfferManager.on("pollData", callback);
+    }
+
+    onSessionExpired(callback: (err: Error) => any){
+        this._community.on("sessionExpired", callback);
     }
 
 
@@ -456,26 +485,13 @@ export class SteamBot extends EventEmitter{
         this._tradeOfferManager.on("receivedOfferChanged", callback);
     }
 
-    onPollFailure(callback: (err: Error) => any){
-        this._tradeOfferManager.on("pollFailure", callback);
-    }
-
-    onPollSuccess(callback: () => any){
-        this._tradeOfferManager.on("pollSuccess", callback);
-    }
-
-    onPollData(callback: (pollData: any) => any){
-        this._tradeOfferManager.on("pollData", callback);
-    }
-
     // Chat events
     onChatLogonFailed(callback: (err: Error, fatal: boolean) => any){
         this._community.on("chatLogOnFailed", callback);
     }
 
-
-    onSessionExpired(callback: (err: Error) => any){
-        this._community.on("sessionExpired", callback);
+    onChatLoggedOf(callback: () => any){
+        this._community.on("chatLoggedOff", callback);
     }
 
     onChatLoggedOn(callback: () => any){
@@ -494,9 +510,6 @@ export class SteamBot extends EventEmitter{
         this._community.on("chatTyping", callback);
     }
 
-    onChatLoggedOf(callback: () => any){
-        this._community.on("chatLoggedOff", callback);
-    }
 
     /** ********** **/
     private printTotpResponse(response: SteamCommunity.EnableTwoFactorResponse){

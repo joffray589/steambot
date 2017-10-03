@@ -10,28 +10,41 @@ let lineReader = ReadLine.createInterface({
 
 let botLoginOption: BotLoginOptions = {};
 
-let doLogin = ((botData: ISteamBotData) => {
+let doLogin = (async (botData: ISteamBotData) => {
 
     let bot = new SteamBot(botData);
 
     console.log("Login...");
 
     bot.login(botLoginOption)
-    .then(() => {
+    .then(async () => {
         console.log("You are now logged in");
 
         bot.chatLogon(200, "web");
 
-        bot.onChatMessage((senderId: SteamID, text: string) => {
+        bot.onChatMessage(async (senderId: SteamID, text: string) => {
             console.log(senderId + " : " + text);
-            bot.sendChatMessage(senderId, "hello " + senderId + " how are you?")
-                .then(() => {
-                    console.log("Answer sended");
-                })
-                .catch((error) => {
-                    console.error("Send answer error : " + error);
-                    console.trace();
-                });
+
+            if(text.startsWith('!trade')){
+                let tokens = text.split(" ");
+                let tradeUrl = tokens[1];
+
+                let offer = await bot.createTradeOffer(tradeUrl);
+
+
+
+            }
+            else{
+                bot.sendChatMessage(senderId, "hello " + senderId + " how are you?")
+                    .then(() => {
+                        console.log("Answer sended");
+                    })
+                    .catch((error) => {
+                        console.error("Send answer error : " + error);
+                        console.trace();
+                    });
+            }
+
         });
 
 
