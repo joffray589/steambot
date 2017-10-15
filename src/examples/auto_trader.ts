@@ -87,6 +87,9 @@ let acceptTrade = (trade: TradeOffer) => {
             else if(state == "pending"){
                 console.log("Trade is pending");
             }
+            else if(state == "escrow"){
+                console.log("Trade will be hold until " + trade.escrowEnds);
+            }
             else{
                 console.error("Unknown trade state : " + state);
             }
