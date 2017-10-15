@@ -17,9 +17,10 @@ export enum TwoFactorState{
     Finalized   = 3
 }
 
-export interface ISteamBotData{
-
-    id?:                    number;
+/**
+ *  Bot data interface
+ */
+export interface SteamBotData{
 
     username:               string;
     password:               string;
@@ -52,15 +53,9 @@ export enum LoginErrorType {
     TradeOfferManagerError
 }
 
-export class LoginError {
+export interface LoginError {
     type: LoginErrorType;
     error?: any;
-
-    constructor(type: LoginErrorType, err?: any){
-        this.type = type;
-        this.error = err;
-    }
-
 }
 
 export interface BotLoginOptions{
@@ -93,13 +88,13 @@ export interface TradeRequest{
  */
 export class SteamBot extends EventEmitter{
 
-    private _botDatas:              ISteamBotData;
+    private _botDatas:              SteamBotData;
     private _community:             SteamCommunity;
     private _tradeOfferManager:     TradeOfferManager;
     private _loginSession:          LoginSession;
     private _confirmationChecker:   boolean;
 
-    constructor(datas: ISteamBotData){
+    constructor(datas: SteamBotData){
         super();
 
         this._botDatas = datas;
@@ -118,7 +113,7 @@ export class SteamBot extends EventEmitter{
     login(options?: BotLoginOptions) : Promise<void>{
         return new Promise<void>((resolve, reject) => {
             if(this._loginSession != null){
-                reject(new LoginError(LoginErrorType.AlreadyLoggedIn));
+                reject(<LoginError>{type: LoginErrorType.AlreadyLoggedIn});
             }
 
             let loginOptions = <SteamCommunity.LoginOptions>{
@@ -136,11 +131,23 @@ export class SteamBot extends EventEmitter{
 
             this._community.login(loginOptions, (err: Error, sessionID: string, cookies: any, steamguard: string) => {
                 if(err){
-                    console.log("Login error : " + err);
-                    if(err.message == "SteamGuardMobile")   { reject(new LoginError(LoginErrorType.MobileCodeRequired)); }
-                    else if(err.message == "SteamGuard")    { reject(new LoginError(LoginErrorType.MailCodeRequired, err));   }
-                    else if(err.message == "CAPTCHA")       { reject(new LoginError(LoginErrorType.CaptchaRequired));    }
-                    else                                    { reject(new LoginError(LoginErrorType.SteamCommunityError, err)); }
+
+                    let loginError: LoginError;
+
+                    if(err.message == "SteamGuardMobile"){
+                        loginError = <LoginError>{type: LoginErrorType.MobileCodeRequired};
+                    }
+                    else if(err.message == "SteamGuard"){
+                        loginError = <LoginError>{type: LoginErrorType.MailCodeRequired, error: err};
+                    }
+                    else if(err.message == "CAPTCHA"){
+                        loginError = <LoginError>{type: LoginErrorType.CaptchaRequired};
+                    }
+                    else{
+                        loginError = <LoginError>{type: LoginErrorType.SteamCommunityError, error: err};
+                    }
+
+                    reject(loginError);
                 }
                 else{
                     this._loginSession = <LoginSession>{
@@ -149,7 +156,7 @@ export class SteamBot extends EventEmitter{
 
                     this._tradeOfferManager.setCookies(cookies, (err: Error) => {
                         if(err){
-                            reject(new LoginError(LoginErrorType.TradeOfferManagerError, err));
+                            reject(<LoginError>{type: LoginErrorType.TradeOfferManagerError, error: err});
                         }
                         else{
 
@@ -541,7 +548,7 @@ export class SteamBot extends EventEmitter{
 
 
     /* *************** */
-    get botDatas(): ISteamBotData {
+    get botDatas(): SteamBotData {
         return this._botDatas;
     }
 

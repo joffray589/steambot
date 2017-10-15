@@ -14,8 +14,10 @@ export declare enum TwoFactorState {
     Enabled = 2,
     Finalized = 3,
 }
-export interface ISteamBotData {
-    id?: number;
+/**
+ *  Bot data interface
+ */
+export interface SteamBotData {
     username: string;
     password: string;
     pollDataDirectory: string;
@@ -40,10 +42,9 @@ export declare enum LoginErrorType {
     SteamCommunityError = 4,
     TradeOfferManagerError = 5,
 }
-export declare class LoginError {
+export interface LoginError {
     type: LoginErrorType;
     error?: any;
-    constructor(type: LoginErrorType, err?: any);
 }
 export interface BotLoginOptions {
     captcha?: string;
@@ -75,7 +76,7 @@ export declare class SteamBot extends EventEmitter {
     private _tradeOfferManager;
     private _loginSession;
     private _confirmationChecker;
-    constructor(datas: ISteamBotData);
+    constructor(datas: SteamBotData);
     login(options?: BotLoginOptions): Promise<void>;
     logout(): Promise<void>;
     enableTotp(): Promise<void>;
@@ -113,6 +114,6 @@ export declare class SteamBot extends EventEmitter {
     private readonly tradeOfferManagerOptions;
     private readonly pollDataFilePath;
     private writePollData(pollData);
-    readonly botDatas: ISteamBotData;
+    readonly botDatas: SteamBotData;
     readonly confirmationChecker: boolean;
 }

@@ -1,4 +1,4 @@
-import {BotLoginOptions, ISteamBotData, LoginErrorType, SteamBot} from "../SteamBot";
+import {BotLoginOptions, SteamBotData, LoginErrorType, SteamBot} from "../SteamBot";
 
 let ReadLine = require('readline');
 let fs = require('fs');
@@ -10,7 +10,7 @@ let lineReader = ReadLine.createInterface({
 
 let botLoginOption: BotLoginOptions = {};
 
-let doLogin = (async (botData: ISteamBotData) => {
+let doLogin = (async (botData: SteamBotData) => {
 
     let bot = new SteamBot(botData);
 
@@ -51,7 +51,7 @@ let doLogin = (async (botData: ISteamBotData) => {
     })
     .catch((loginError) => {
         if(loginError.type == LoginErrorType.CaptchaRequired){
-            console.log(loginError.error.captchaurl);
+            console.log("Captcha required : " + loginError.error.captchaurl);
             lineReader.question("Captcha : ", (captcha: string) => {
                 botLoginOption.captcha = captcha;
                 doLogin(botData);
@@ -66,7 +66,7 @@ let doLogin = (async (botData: ISteamBotData) => {
         }
         else if(loginError.type == LoginErrorType.MobileCodeRequired){
             lineReader.question("Steam Guard Code : ", (code: string) => {
-                botLoginOption.steamguard = code;
+                botLoginOption.twoFactorCode = code;
                 doLogin(botData);
             });
         }
@@ -79,14 +79,14 @@ let doLogin = (async (botData: ISteamBotData) => {
     });
 });
 
-let botData: ISteamBotData = <ISteamBotData>{
+let botData: SteamBotData = <SteamBotData>{
     username: "",
     password: "",
     pollDataDirectory: "data",
 };
 
 try{
-    botData = <ISteamBotData>JSON.parse(fs.readFileSync('testing_botdata.json', 'utf8'));
+    botData = <SteamBotData>JSON.parse(fs.readFileSync('testing_botdata.json', 'utf8'));
     doLogin(botData);
 }
 catch(error){

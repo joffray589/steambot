@@ -21,13 +21,6 @@ var LoginErrorType;
     LoginErrorType[LoginErrorType["SteamCommunityError"] = 4] = "SteamCommunityError";
     LoginErrorType[LoginErrorType["TradeOfferManagerError"] = 5] = "TradeOfferManagerError";
 })(LoginErrorType = exports.LoginErrorType || (exports.LoginErrorType = {}));
-class LoginError {
-    constructor(type, err) {
-        this.type = type;
-        this.error = err;
-    }
-}
-exports.LoginError = LoginError;
 exports.SteamBotEvent = {
     DataModified: "DataModified",
     LoggedIn: "LoggedIn"
@@ -51,7 +44,7 @@ class SteamBot extends events_1.EventEmitter {
     login(options) {
         return new Promise((resolve, reject) => {
             if (this._loginSession != null) {
-                reject(new LoginError(LoginErrorType.AlreadyLoggedIn));
+                reject({ type: LoginErrorType.AlreadyLoggedIn });
             }
             let loginOptions = {
                 accountName: this._botDatas.username,
@@ -66,19 +59,20 @@ class SteamBot extends events_1.EventEmitter {
             }
             this._community.login(loginOptions, (err, sessionID, cookies, steamguard) => {
                 if (err) {
-                    console.log("Login error : " + err);
+                    let loginError;
                     if (err.message == "SteamGuardMobile") {
-                        reject(new LoginError(LoginErrorType.MobileCodeRequired));
+                        loginError = { type: LoginErrorType.MobileCodeRequired };
                     }
                     else if (err.message == "SteamGuard") {
-                        reject(new LoginError(LoginErrorType.MailCodeRequired, err));
+                        loginError = { type: LoginErrorType.MailCodeRequired, error: err };
                     }
                     else if (err.message == "CAPTCHA") {
-                        reject(new LoginError(LoginErrorType.CaptchaRequired));
+                        loginError = { type: LoginErrorType.CaptchaRequired };
                     }
                     else {
-                        reject(new LoginError(LoginErrorType.SteamCommunityError, err));
+                        loginError = { type: LoginErrorType.SteamCommunityError, error: err };
                     }
+                    reject(loginError);
                 }
                 else {
                     this._loginSession = {
@@ -86,7 +80,7 @@ class SteamBot extends events_1.EventEmitter {
                     };
                     this._tradeOfferManager.setCookies(cookies, (err) => {
                         if (err) {
-                            reject(new LoginError(LoginErrorType.TradeOfferManagerError, err));
+                            reject({ type: LoginErrorType.TradeOfferManagerError, error: err });
                         }
                         else {
                             this._loginSession = {
